@@ -60,8 +60,21 @@ module screwHoles(H, holeH, nutD, screwD) {
 }
 
 module ellipse(h, t, w) {
-    scale ([w/t, 1, 1])
-        cylinder (r=t/2, h=h);
+    // scale ([w/t, 1, 1])
+    //     cylinder (r=t/2, h=h);
+	
+	circaled(h, t, w);
+}
+
+module circaled(h, t, w) {
+	minAx = min(t, w);
+	maxAx = max(t, w);
+	hull() {
+		translate([0, (maxAx-minAx)/2, 0]) 
+			cylinder(r=minAx/2, h=h);
+		translate([0, -(maxAx-minAx)/2, 0]) 
+			cylinder(r=minAx/2, h=h);
+	}
 }
 
 module gripWall (L, W, H) {
