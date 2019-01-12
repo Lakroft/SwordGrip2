@@ -2,15 +2,15 @@
 
 //*************** ПЕРЕМЕННЫЕ ***************************************************
 //Все размеры в см.
+TOLERANCE = 0.05; // TODO: Спросить Диму о допуске на усадку.
 GRIP_LENGTH = 20;
 GRIP_WIDTH = 3.5;
 GRIP_HEIGHT = 2.5;
 WALL_WIDTH = 0.3;
-BLADE_THICKNESS = 0.9 + 0.2; //Значение + запас
-BLADE_WIDTH = 2 + 0.3; //Значение + запас
+BLADE_THICKNESS = 0.9 + 0.2; //Значение + запас TODO: выразить запас в TOLERANCE
+BLADE_WIDTH = 2 + 0.3; //Значение + запас TODO: выразить запас в TOLERANCE
 HOLDER_WIDTH = BLADE_WIDTH;
 HOLDER_LENGTH = GRIP_LENGTH/2;
-TOLERANCE = 0.1;
 
 BUTTON_LENGTH = 0.5;
 BUTTON_WIDTH = 0.8;
@@ -28,14 +28,14 @@ LEG_EXTRA_SPACE = 0.1;
 // Нижняя крышка с кнопкой.
 CAP_LENGTH = BUTTON_SHELF_LENGTH;
 CAP_HEAD_WIDTH = GRIP_WIDTH;
-CAP_BODY_WIDTH = CAP_HEAD_WIDTH - WALL_WIDTH - TOLERANCE;
+CAP_BODY_WIDTH = CAP_HEAD_WIDTH - (WALL_WIDTH + TOLERANCE) * 2;
 CAP_HEAD_HEIGHT = GRIP_HEIGHT;
-CAP_BODY_HEIGHT = CAP_HEAD_HEIGHT - WALL_WIDTH - TOLERANCE;
+CAP_BODY_HEIGHT = CAP_HEAD_HEIGHT - (WALL_WIDTH + TOLERANCE) * 2;
 CAP_HEAD = BUTTON_WINDOW_LENGTH;
 CAP_BODY = CAP_LENGTH - CAP_HEAD;
 CAP_SCREW_X = CAP_HEAD + CAP_BODY/2;
 
-BATTERY_BLOCK_LENGTH = GRIP_LENGTH - HOLDER_LENGTH - BUTTON_SHELF_LENGTH;
+BATTERY_BLOCK_LENGTH = GRIP_LENGTH - HOLDER_LENGTH;
 BATTERY_BLOCK_WIDTH = GRIP_WIDTH - 2 * WALL_WIDTH;
 BATTERY_BLOCK_HEIGHT = GRIP_HEIGHT - 2 * WALL_WIDTH;
 BATTERY_BLOCK_INTEND = HOLDER_LENGTH;
@@ -57,10 +57,20 @@ $fn=180;
 // translate([0, GRIP_WIDTH * 1.5, 0])
 // 	gripBase();
 	
-translate([0, -GRIP_WIDTH * 1.5, 0])
-	gripBaseWithButton();
+// translate([0, -GRIP_WIDTH * 1.5, 0])
+// 	gripBase();
 	
-capWithButton();
+// capWithButton();
+
+translate([-GRIP_LENGTH - WALL_WIDTH - TOLERANCE, 0, 0])
+	gripBase();
+
+rotate([180, 0, 0])
+	translate([-GRIP_LENGTH - WALL_WIDTH - TOLERANCE, 0, 0])
+		gripBase();
+	
+rotate([0, 0, 180])
+	capWithButton();
 
 //*************** МОДУЛИ ***************************************************
 module screwHoles(H, holeH, nutD, screwD) {
@@ -69,13 +79,6 @@ module screwHoles(H, holeH, nutD, screwD) {
         translate([0, 0, H - holeH])
             cylinder (r=screwD/2, h=holeH);
     }
-}
-
-module ellipse(h, t, w) {
-    // scale ([w/t, 1, 1])
-    //     cylinder (r=t/2, h=h);
-	
-	circaled(h, t, w);
 }
 
 module circaled(h, t, w) {
@@ -91,7 +94,7 @@ module circaled(h, t, w) {
 
 module gripWall (L, W, H) {
         rotate([0, 90 , 0])
-            ellipse(L, W, H);
+            circaled(L, W, H);
 }
 
 module gripWallHalf(L, W, H) {
@@ -105,41 +108,31 @@ module gripWallHalf(L, W, H) {
 module batteryBlock(batBlL, batBlW, batBlH, batBlIntend) {
     translate ([batBlIntend, 0, 0])
             rotate([0, 90 , 0])
-                ellipse(batBlL,
+                circaled(batBlL,
                     batBlW,
                     batBlH);
-}
-
-// Может пригодиться в дальнейшем как подставка для кнопки или батарейного блока
-module bladeHolder(gripW, gripH, holderW, holderL) {
-    intersection() {
-        translate([0, -holderW/2, -gripH/2])
-            cube ([holderL, holderW,
-                gripH/2]);
-        rotate([0, 90 , 0])
-            ellipse(holderL, gripW, gripH);
-    }
 }
 
 module buttonHole(butL, butW, butH,
 	butWinL, butWinW, butWinH, butWinInt,
 	butRestL, butRestW, butRestH, legExtraSpace) {
 	
-	// Координаты от середины кнопки.
+	// Координаты от середины кнопки. TOLERANCE используется для более удобного предпросмотра в редакторе, 
+	// и не влияет на саму модель
 	legWidth = (butW - butRestW)/2;
 	union() {
 		// Вырезы для ножек кнопки. 
 		// Между ними сформируется стопор для тела кнопки.
 		for(legsHoleY = [butRestW/2, -legWidth - butRestW/2 - legExtraSpace]) {
-			translate([-0.1, legsHoleY, 0]) // по х - тело кнопки + окошко
-				cube([butRestL + 0.1, legWidth + legExtraSpace, butRestH]);
+			translate([butL + butWinL, legsHoleY, 0]) // по х - тело кнопки + окошко
+				cube([butRestL + TOLERANCE, legWidth + legExtraSpace, butRestH]); // Про TOLERANCE см. выше
 		}
 		// "Тело" кнопки
-		translate([butRestL, -butW/2, 0]) // по х - окошко
+		translate([butWinL, -butW/2, 0]) // по х - окошко
 			cube([butL, butW, butH]);
-		// "Окошко" для нажимной части кнопки
-		translate([butRestL + butL, (butW - butWinW)/2 - butW/2, butWinInt]) // по х - 0,1
-			cube([butWinL + 0.1, butWinW, butWinH]);
+		// "Окошко" для нажимной части кнопки. Про TOLERANCE см. выше
+		translate([-TOLERANCE, (butW - butWinW)/2 - butW/2, butWinInt]) // по х - 0,1
+			cube([butWinL + TOLERANCE, butWinW, butWinH]);
 	}
 }
 
@@ -170,20 +163,6 @@ module gripBase() {
     }
 }
 
-module gripBaseWithButton() {
-	difference() {
-		gripBase();
-		
-		translate([GRIP_LENGTH - BUTTON_SHELF_LENGTH, 
-			0, -BUTTON_HEIGHT])
-			buttonHole(BUTTON_LENGTH, BUTTON_WIDTH, BUTTON_HEIGHT + 0.1,
-				BUTTON_WINDOW_LENGTH, BUTTON_WINDOW_WIDTH, BUTTON_WINDOW_HEIGHT,
-				BUTTON_WINDOW_INTEND,
-				BUTTON_REST_LENGTH, BUTTON_REST_WIDTH, BUTTON_REST_HEIGHT + 0.1, 
-				LEG_EXTRA_SPACE);
-	}
-}
-
 module capWithButton() {
 	difference() {
 		union() {
@@ -197,7 +176,7 @@ module capWithButton() {
 					screwHoles(GRIP_HEIGHT, GRIP_HEIGHT, NUT_D_M3, SCREW_D_M3);
 			}
 		}
-		rotate([0, 0 , 180]) translate([-BUTTON_SHELF_LENGTH, 0, CAP_BODY_HEIGHT/2 - BUTTON_HEIGHT])
+		translate([0, 0, CAP_BODY_HEIGHT/2 - BUTTON_HEIGHT])
 			buttonHole(BUTTON_LENGTH, BUTTON_WIDTH, BUTTON_HEIGHT,
 					BUTTON_WINDOW_LENGTH, BUTTON_WINDOW_WIDTH, BUTTON_WINDOW_HEIGHT,
 					BUTTON_WINDOW_INTEND,
