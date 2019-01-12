@@ -48,25 +48,18 @@ SCREW_POINT_M3_Y = BUTTON_WIDTH/2 + LEG_EXTRA_SPACE + WALL_WIDTH;
 SCREW_INTEND = 2;
 SCREW_POINTS = [(HOLDER_LENGTH - SCREW_INTEND)/3 + SCREW_INTEND,
                 2*(HOLDER_LENGTH - SCREW_INTEND)/3 + SCREW_INTEND];
+SCREW_HEAD_HOLE = 0.15;
 
 $fn=180;
 
 
 //********************* MAIN ***************************************************
 
-// translate([0, GRIP_WIDTH * 1.5, 0])
-// 	gripBase();
-	
-// translate([0, -GRIP_WIDTH * 1.5, 0])
-// 	gripBase();
-	
-// capWithButton();
-
-translate([-GRIP_LENGTH - WALL_WIDTH - TOLERANCE, 0, 0])
+translate([-GRIP_LENGTH - WALL_WIDTH - TOLERANCE, 0, $t * -GRIP_HEIGHT])
 	gripBase();
 
 rotate([180, 0, 0])
-	translate([-GRIP_LENGTH - WALL_WIDTH - TOLERANCE, 0, 0])
+	translate([-GRIP_LENGTH - WALL_WIDTH - TOLERANCE, 0, $t * -GRIP_HEIGHT])
 		gripBase();
 	
 rotate([0, 0, 180])
@@ -151,7 +144,7 @@ module gripBase() {
 	translate([SCREW_POINT_M3_X, SCREW_POINT_M3_Y, -GRIP_HEIGHT/2])
 		screwHoles(GRIP_HEIGHT/2, GRIP_HEIGHT/2, NUT_D_M3, SCREW_D_M3);
 	translate([SCREW_POINT_M3_X, -SCREW_POINT_M3_Y, -GRIP_HEIGHT/2])
-		screwHoles(GRIP_HEIGHT/2, GRIP_HEIGHT/2 - 0.15, NUT_D_M3, SCREW_D_M3);
+		screwHoles(GRIP_HEIGHT/2, GRIP_HEIGHT/2 - SCREW_HEAD_HOLE, NUT_D_M3, SCREW_D_M3);
 
 		// Держатель лезвия
     translate([0, -BLADE_WIDTH/2, -BLADE_THICKNESS/2])
